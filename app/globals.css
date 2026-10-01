@@ -70,7 +70,7 @@ button, input { font:inherit; } button { cursor:pointer; }
 .column-cards { border-color:#292929; background:#0f0f0f; }
 .vehicle-card { border-color:#2b2b2b; background:#181818; }
 .vehicle-card:hover, .vehicle-card:focus-visible { border-color:var(--accent); outline:none; box-shadow:0 0 0 2px #e21b2333; }
-.plate small { background:var(--accent); }
+.plate small { background:#2563eb; }
 .technician { border-color:#474747; color:#f0f0f0; background:#222; }
 .technician svg { color:#fff; }
 .age { color:#fff; background:#303030; }
