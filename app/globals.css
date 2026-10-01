@@ -83,7 +83,30 @@ button, input { font:inherit; } button { cursor:pointer; }
 .move-status button:hover { border-color:var(--accent); color:#fff; }
 .form-field input:focus, .form-field textarea:focus, .form-field select:focus { border-color:var(--accent); box-shadow:0 0 0 2px #e21b2333; }
 .status-options label.active, .status-options label:hover { border-color:var(--accent); color:#fff; }
-.toast { border-color:#5c1b1e; background:#190b0c; }
+  .toast { border-color:#5c1b1e; background:#190b0c; }
+
+  /* Edit form follows the board's black, white and red visual language. */
+  .detail-edit-modal { width:min(760px, calc(100vw - 32px)); max-height:min(920px, calc(100vh - 32px)); overflow:auto; padding:30px; border:1px solid #343438; border-radius:20px; background:#111113; box-shadow:0 28px 90px #000d; }
+  .detail-edit-modal .new-os-header { align-items:flex-start; margin-bottom:28px; }
+  .detail-edit-modal .modal-kicker { margin:0 0 7px; color:#e21b23; font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .detail-edit-modal .new-os-header h2 { margin:0; color:#fff; font-size:34px; letter-spacing:-.04em; }
+  .detail-edit-modal .form-field { gap:9px; }
+  .detail-edit-modal .form-field label, .detail-edit-modal .status-field legend { color:#a7a7ad; font-size:12px; font-weight:800; letter-spacing:.1em; }
+  .detail-edit-modal .form-field input, .detail-edit-modal .form-field textarea, .detail-edit-modal .form-field select { min-height:48px; border-color:#303034; border-radius:12px; background:#1a1a1d; color:#f5f5f5; }
+  .detail-edit-modal .form-field textarea { min-height:104px; }
+  .detail-edit-modal .form-field input::placeholder, .detail-edit-modal .form-field textarea::placeholder { color:#6f6f76; }
+  .detail-edit-modal .status-field { margin-top:4px; padding:0; border:0; }
+  .detail-edit-modal .status-options { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .detail-edit-modal .status-options label { border:1px solid #3b3b40; border-radius:999px; background:#18181b; color:#c7c7cb; transition:background .15s, border-color .15s, color .15s; }
+  .detail-edit-modal .status-options label:hover, .detail-edit-modal .status-options label.active { border-color:#e21b23; background:#e21b23; color:#fff; }
+  .detail-edit-modal .modal-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:28px; }
+  .detail-edit-modal .secondary-action, .detail-edit-modal .primary-action { min-height:48px; border-radius:11px; font-weight:800; }
+  .detail-edit-modal .secondary-action { border:1px solid #343438; background:#1a1a1d; color:#f5f5f5; }
+  .detail-edit-modal .primary-action { border:1px solid #e21b23; background:#e21b23; color:#fff; }
+  .detail-edit-modal .secondary-action:hover { border-color:#77777d; background:#242428; }
+  .detail-edit-modal .primary-action:hover { background:#ff2b34; }
+  @media (max-width:640px) { .detail-edit-modal { padding:22px; }.detail-edit-modal .new-os-header h2 { font-size:29px; }.detail-edit-modal .modal-actions { grid-template-columns:1fr; } }
+
 @media (max-width: 1200px) {
   .kanban-board { gap:7px; padding-inline:18px; }
   .column-heading { padding-inline:10px; }
