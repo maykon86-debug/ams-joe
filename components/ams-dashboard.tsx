@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Bell, ChevronDown, Clock3, Eye, EyeOff, MoreHorizontal, Plus, Search, Settings, SlidersHorizontal, Trash2, Wrench, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -60,6 +60,7 @@ export function AmsDashboard() {
   const [toast, setToast] = useState('')
   const [hasLoadedStorage, setHasLoadedStorage] = useState(false)
   const [currentTime, setCurrentTime] = useState<Date | null>(null)
+  const skipNextSaveRef = useRef(false)
   const technicians = useMemo(() => ['Todos', ...Array.from(new Set(vehicles.map((vehicle) => vehicle.technician)))], [vehicles])
   const supabase = useMemo(() => createClient(), [])
   const boardTable = useMemo(() => supabase.from('ams_board_state' as never) as any, [supabase])
@@ -113,6 +114,7 @@ export function AmsDashboard() {
           }
 
           if (payload.eventType === 'DELETE' || !nextState) return
+          skipNextSaveRef.current = true
           if (Array.isArray(nextState.vehicles)) setVehicles(nextState.vehicles)
           if (nextState.sla_targets && typeof nextState.sla_targets === 'object') {
             setSlaTargets({ ...defaultSla, ...nextState.sla_targets })
@@ -135,6 +137,10 @@ export function AmsDashboard() {
 
   useEffect(() => {
     if (!hasLoadedStorage) return
+    if (skipNextSaveRef.current) {
+      skipNextSaveRef.current = false
+      return
+    }
     const saveBoard = async () => {
       const { error } = await boardTable.upsert({
         id: boardId,
