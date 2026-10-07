@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Bell, ChevronDown, Clock3, Eye, EyeOff, MoreHorizontal, Plus, Search, Settings, SlidersHorizontal, Trash2, Wrench, X } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 type Status = 'Distribuição' | 'Próximo atendimento' | 'Diagnóstico' | 'Aguardando aprovação' | 'Aguardando peças' | 'Em execução' | 'Inspeção final' | 'Finalizado'
 
@@ -60,6 +61,7 @@ export function AmsDashboard() {
   const [hasLoadedStorage, setHasLoadedStorage] = useState(false)
   const [currentTime, setCurrentTime] = useState<Date | null>(null)
   const technicians = useMemo(() => ['Todos', ...Array.from(new Set(vehicles.map((vehicle) => vehicle.technician)))], [vehicles])
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     const updateClock = () => setCurrentTime(new Date())
