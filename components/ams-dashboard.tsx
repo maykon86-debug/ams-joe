@@ -63,7 +63,8 @@ export function AmsDashboard() {
   const technicians = useMemo(() => ['Todos', ...Array.from(new Set(vehicles.map((vehicle) => vehicle.technician)))], [vehicles])
   const supabase = useMemo(() => createClient(), [])
   const boardTable = useMemo(() => supabase.from('ams_board_state' as never) as any, [supabase])
-  const boardId = 'main'
+  // The shared row and its RLS policies use the canonical default board id.
+  const boardId = 'default'
 
   useEffect(() => {
     const updateClock = () => setCurrentTime(new Date())
