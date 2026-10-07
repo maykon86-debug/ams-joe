@@ -62,6 +62,7 @@ export function AmsDashboard() {
   const [currentTime, setCurrentTime] = useState<Date | null>(null)
   const technicians = useMemo(() => ['Todos', ...Array.from(new Set(vehicles.map((vehicle) => vehicle.technician)))], [vehicles])
   const supabase = useMemo(() => createClient(), [])
+  const boardTable = useMemo(() => supabase.from('ams_board_state' as never) as any, [supabase])
   const boardId = 'main'
 
   useEffect(() => {
@@ -75,8 +76,7 @@ export function AmsDashboard() {
     let isMounted = true
 
     const loadBoard = async () => {
-      const { data, error } = await supabase
-        .from('ams_board_state')
+      const { data, error } = await boardTable
         .select('vehicles, sla_targets, visible_columns')
         .eq('id', boardId)
         .maybeSingle()
@@ -94,12 +94,48 @@ export function AmsDashboard() {
 
     void loadBoard()
     return () => { isMounted = false }
-  }, [boardId, supabase])
+  }, [boardId, boardTable])
+
+  useEffect(() => {
+    if (!hasLoadedStorage) return
+
+    const channel = supabase
+      .channel(`ams-board-state-${boardId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'ams_board_state', filter: `id=eq.${boardId}` },
+        (payload) => {
+          const nextState = payload.new as {
+            vehicles?: Vehicle[]
+            sla_targets?: Record<Status, SlaTarget>
+            visible_columns?: Status[]
+          }
+
+          if (payload.eventType === 'DELETE' || !nextState) return
+          if (Array.isArray(nextState.vehicles)) setVehicles(nextState.vehicles)
+          if (nextState.sla_targets && typeof nextState.sla_targets === 'object') {
+            setSlaTargets({ ...defaultSla, ...nextState.sla_targets })
+          }
+          if (Array.isArray(nextState.visible_columns) && nextState.visible_columns.length > 0) {
+            setVisibleColumns(nextState.visible_columns)
+          }
+        },
+      )
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.error('[v0] Shared board realtime subscription failed:', status)
+        }
+      })
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [boardId, hasLoadedStorage, supabase])
 
   useEffect(() => {
     if (!hasLoadedStorage) return
     const saveBoard = async () => {
-      const { error } = await supabase.from('ams_board_state').upsert({
+      const { error } = await boardTable.upsert({
         id: boardId,
         vehicles,
         sla_targets: slaTargets,
@@ -109,7 +145,7 @@ export function AmsDashboard() {
       if (error) console.error('[v0] Failed to save shared board state:', error)
     }
     void saveBoard()
-  }, [boardId, hasLoadedStorage, slaTargets, supabase, vehicles, visibleColumns])
+  }, [boardId, boardTable, hasLoadedStorage, slaTargets, vehicles, visibleColumns])
 
   const deleteVehicle = (vehicle: Vehicle) => {
     setVehicles((items) => items.filter((item) => item.id !== vehicle.id))
