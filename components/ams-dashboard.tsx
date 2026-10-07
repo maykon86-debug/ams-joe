@@ -62,6 +62,7 @@ export function AmsDashboard() {
   const [currentTime, setCurrentTime] = useState<Date | null>(null)
   const technicians = useMemo(() => ['Todos', ...Array.from(new Set(vehicles.map((vehicle) => vehicle.technician)))], [vehicles])
   const supabase = useMemo(() => createClient(), [])
+  const boardId = 'main'
 
   useEffect(() => {
     const updateClock = () => setCurrentTime(new Date())
@@ -71,25 +72,44 @@ export function AmsDashboard() {
   }, [])
 
   useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem('ams-mecanica-board')
-      if (stored) {
-        const parsed = JSON.parse(stored) as { vehicles?: Vehicle[]; slaTargets?: Record<Status, SlaTarget>; visibleColumns?: Status[] }
-        if (Array.isArray(parsed.vehicles)) setVehicles(parsed.vehicles)
-        if (parsed.slaTargets) setSlaTargets({ ...defaultSla, ...parsed.slaTargets })
-        if (Array.isArray(parsed.visibleColumns) && parsed.visibleColumns.length > 0) setVisibleColumns(parsed.visibleColumns)
+    let isMounted = true
+
+    const loadBoard = async () => {
+      const { data, error } = await supabase
+        .from('ams_board_state')
+        .select('vehicles, sla_targets, visible_columns')
+        .eq('id', boardId)
+        .maybeSingle()
+
+      if (!isMounted) return
+      if (error) {
+        console.error('[v0] Failed to load shared board state:', error)
+      } else if (data) {
+        if (Array.isArray(data.vehicles)) setVehicles(data.vehicles as Vehicle[])
+        if (data.sla_targets && typeof data.sla_targets === 'object') setSlaTargets({ ...defaultSla, ...(data.sla_targets as Partial<Record<Status, SlaTarget>>) })
+        if (Array.isArray(data.visible_columns) && data.visible_columns.length > 0) setVisibleColumns(data.visible_columns as Status[])
       }
-    } catch {
-      window.localStorage.removeItem('ams-mecanica-board')
-    } finally {
       setHasLoadedStorage(true)
     }
-  }, [])
+
+    void loadBoard()
+    return () => { isMounted = false }
+  }, [boardId, supabase])
 
   useEffect(() => {
     if (!hasLoadedStorage) return
-    window.localStorage.setItem('ams-mecanica-board', JSON.stringify({ vehicles, slaTargets, visibleColumns }))
-  }, [hasLoadedStorage, vehicles, slaTargets, visibleColumns])
+    const saveBoard = async () => {
+      const { error } = await supabase.from('ams_board_state').upsert({
+        id: boardId,
+        vehicles,
+        sla_targets: slaTargets,
+        visible_columns: visibleColumns,
+        updated_at: new Date().toISOString(),
+      })
+      if (error) console.error('[v0] Failed to save shared board state:', error)
+    }
+    void saveBoard()
+  }, [boardId, hasLoadedStorage, slaTargets, supabase, vehicles, visibleColumns])
 
   const deleteVehicle = (vehicle: Vehicle) => {
     setVehicles((items) => items.filter((item) => item.id !== vehicle.id))
